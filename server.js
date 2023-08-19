@@ -4,9 +4,13 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const userRouter = require('./routes/user.route');
 
 const app = express();
 const PORT = process.env.PORT || 5010;
+
+// Routes
+app.use('/api/v1/users', userRouter);
 
 // Middlewares
 app.use(express.json());
