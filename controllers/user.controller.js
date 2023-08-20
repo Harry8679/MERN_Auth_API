@@ -1,6 +1,5 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/user.model');
-const bcrypt = require('bcryptjs');
 const { generateToken } = require('../utils/index.util');
 
 const registerUser = asyncHandler(async (req, res) => {
