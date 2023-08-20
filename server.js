@@ -10,12 +10,10 @@ const errorHandler = require('./middlewares/error.middleware');
 const app = express();
 const PORT = process.env.PORT || 5010;
 
-// Routes
-app.use('/api/v1/users', userRouter);
 
 // Middlewares
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
@@ -23,7 +21,10 @@ app.use(
         origin: ['http://localhost:3000', 'https://authz-app.vercel.app'],
         credentials: true
     })
-)
+    )
+    
+// Routes
+app.use('/api/v1/users', userRouter);
 
 app.get('/', (req, res) => {
     res.send('Home Page');
