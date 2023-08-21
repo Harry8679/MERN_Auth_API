@@ -163,4 +163,9 @@ const updateUser = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser };
+// Delete a user
+const deleteUser = asyncHandler(async(req, res) => {
+    res.send('Delete a user');
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser };

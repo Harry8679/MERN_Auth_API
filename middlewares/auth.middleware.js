@@ -34,4 +34,34 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 });
 
-module.exports = { protect };
+const adminOnly = asyncHandler(async(req, res, next) => {
+    if (req.user && req.user.role === "admin") {
+        next();
+    } else {
+        res.status(401);
+        throw new Error('Cette action est réservée aux admins');
+
+    }
+});
+
+const authorOnly = asyncHandler(async(req, res, next) => {
+    if (req.user.role === "author" || req.user.role === "admin") {
+        next();
+    } else {
+        res.status(401);
+        throw new Error('Cette action est réservée à l\'auteur');
+
+    }
+});
+
+const verifiedOnly = asyncHandler(async(req, res, next) => {
+    if (req.user || req.user.isVerified) {
+        next();
+    } else {
+        res.status(401);
+        throw new Error('Cette action est réservée à un compte vérifié');
+
+    }
+});
+
+module.exports = { protect, adminOnly, authorOnly, verifiedOnly };
