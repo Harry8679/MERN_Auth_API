@@ -165,7 +165,18 @@ const updateUser = asyncHandler(async (req, res) => {
 
 // Delete a user
 const deleteUser = asyncHandler(async(req, res) => {
-    res.send('Delete a user');
+    const user = User.findById(req.params.id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('Utilisateur inexistant');
+    }
+
+    // await user.remove();
+    await user.deleteOne();
+    res.status(200).json({
+        message: 'Cet utilisateur a bien été supprimé !'
+    });
 });
 
 module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser };
