@@ -135,4 +135,32 @@ const getUser = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser };
+// Update his profile
+const updateUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        const { name, email,  phone, bio, photo, role, isVerified } = user;
+
+        user.name = req.body.name || name;
+        user.email = req.body.email || email;
+        user.phone = req.body.phone || phone;
+        user.bio = req.body.bio || bio;
+        user.photo = req.body.photo || photo;
+
+        const updateUser = await user.save();
+
+        res.status(200).json({
+            _id: updateUser._id, 
+            name: updateUser.name, 
+            email: updateUser.email, 
+            phone: updateUser.phone, 
+            bio: updateUser.bio, 
+            photo: updateUser.photo, 
+            role: updateUser.role, 
+            isVerified: updateUser.isVerified
+        });
+    }
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser };
