@@ -4,6 +4,7 @@ const { generateToken } = require('../utils/index.util');
 const parser = require('ua-parser-js');
 const bcrypt = require('bcryptjs');
 
+// Register : Create a account
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -57,6 +58,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 });
 
+// Login
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -104,4 +106,16 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser };
+const logoutUser = asyncHandler(async (req, res) => {
+    res.cookie('token', '', {
+        path: '/',
+        httpOnly: true,
+        expires: new Date(0),
+        sameSite: 'none',
+        secure: true
+    });
+
+    return res.status(200).json({ message: 'Vous avez bien été déconnecté.' })
+});
+
+module.exports = { registerUser, loginUser, logoutUser };
