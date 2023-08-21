@@ -106,6 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
+// Logout
 const logoutUser = asyncHandler(async (req, res) => {
     res.cookie('token', '', {
         path: '/',
@@ -118,4 +119,9 @@ const logoutUser = asyncHandler(async (req, res) => {
     return res.status(200).json({ message: 'Vous avez bien été déconnecté.' })
 });
 
-module.exports = { registerUser, loginUser, logoutUser };
+// Profile
+const getUser = asyncHandler(async (req, res) => {
+    res.send('Get User');
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser };
