@@ -202,7 +202,6 @@ const loginStatus = asyncHandler(async(req, res) => {
 
     // Verify token
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('JWT', process.env.JWT_SECRET);
 
     if (verified) {
         return res.json(true);
@@ -211,4 +210,21 @@ const loginStatus = asyncHandler(async(req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus };
+// Change the Role of a user
+const upgradeUser = asyncHandler(async(req, res) => {
+    const { id, role } = req.body;
+    
+    const user = await User.findById(id);
+
+    if (!user) {
+        res.status(500);
+        throw new Error('Utilisateur non existant !');
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.status(200).json({ message: `Cet utilisateur à désormais le role ${role}` });
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser };
