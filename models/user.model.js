@@ -35,7 +35,7 @@ const userSchema = mongoose.Schema(
         },
         role: {
             type: String,
-            default: 'Abonné(e)'
+            default: 'subscriber'
         },
         isVerified: {
             type: Boolean,
