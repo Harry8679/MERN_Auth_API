@@ -4,6 +4,8 @@ const { generateToken } = require('../utils/index.util');
 const parser = require('ua-parser-js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../utils/sendEmail.util');
+// const { sendEmail } = require('../utils/sendEmail.util');
 
 // Register : Create a account
 const registerUser = asyncHandler(async (req, res) => {
@@ -227,4 +229,34 @@ const upgradeUser = asyncHandler(async(req, res) => {
     res.status(200).json({ message: `Cet utilisateur à désormais le role ${role}` });
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser };
+
+const sendAutomatedEmail = asyncHandler(async(req, res) => {
+    const { subject, send_to, reply_on, template, url } = req.body;
+
+    if (!subject || !send_to || !reply_on || !template) {
+        res.status(500);
+        throw new Error('Un ou plusieurs paramètres sont manquants');
+    }
+
+    // Get user
+    const user = await User.findOne({ email: send_to });
+
+    if (!user) {
+        res.status(404);
+        throw new Error('Utilisateur non trouvé');
+    }
+
+    const sent_from = process.env.EMAIL_USER;
+    const name = user.name;
+    const link = `${process.env.FRONTEND_URL}${url}`;
+
+    try {
+        await sendEmail(subject, send_to, sent_from, reply_on, template, name, link);
+        res.status(200).json({ message: 'Email envoyé !' });
+    } catch(error) {
+        res.status(500);
+        throw new Error('L\'Email n\'a pas été envoyé, veuillez réessayer');
+    }
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail };
