@@ -1,11 +1,12 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/user.model');
+const Token = require('../models/token.model');
 const { generateToken } = require('../utils/index.util');
 const parser = require('ua-parser-js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail.util');
-// const { sendEmail } = require('../utils/sendEmail.util');
+const crypto = require('crypto');
 
 // Register : Create a account
 const registerUser = asyncHandler(async (req, res) => {
@@ -259,4 +260,31 @@ const sendAutomatedEmail = asyncHandler(async(req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail };
+const sendVerificationEmail = asyncHandler(async(req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('Utilisateur non trouvé.');
+    }
+    
+    if (user.isVerified) {
+        res.status(400);
+        throw new Error('Compte déjà vérifié.')
+    }
+
+    // Delete Token if it exists in DB
+    let token = await Token.findOne({ userId: user._id })
+
+    if (token) {
+        await token.deleteOne();
+    }
+
+    // Create verification Token and save
+    const verificationToken = crypto.randomBytes(32).toString('hex') + user._id;
+
+    console.log(verificationToken);
+    res.send('Token')
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail };
