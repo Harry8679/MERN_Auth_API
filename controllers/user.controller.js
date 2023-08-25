@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/user.model');
 const Token = require('../models/token.model');
-const { generateToken } = require('../utils/index.util');
+const { generateToken, hashToken } = require('../utils/index.util');
 const parser = require('ua-parser-js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -232,9 +232,9 @@ const upgradeUser = asyncHandler(async(req, res) => {
 
 
 const sendAutomatedEmail = asyncHandler(async(req, res) => {
-    const { subject, send_to, reply_on, template, url } = req.body;
+    const { subject, send_to, reply_to, template, url } = req.body;
 
-    if (!subject || !send_to || !reply_on || !template) {
+    if (!subject || !send_to || !reply_to || !template) {
         res.status(500);
         throw new Error('Un ou plusieurs paramètres sont manquants');
     }
@@ -252,7 +252,7 @@ const sendAutomatedEmail = asyncHandler(async(req, res) => {
     const link = `${process.env.FRONTEND_URL}${url}`;
 
     try {
-        await sendEmail(subject, send_to, sent_from, reply_on, template, name, link);
+        await sendEmail(subject, send_to, sent_from, reply_to, template, name, link);
         res.status(200).json({ message: 'Email envoyé !' });
     } catch(error) {
         res.status(500);
@@ -282,9 +282,34 @@ const sendVerificationEmail = asyncHandler(async(req, res) => {
 
     // Create verification Token and save
     const verificationToken = crypto.randomBytes(32).toString('hex') + user._id;
-
     console.log(verificationToken);
-    res.send('Token')
+    const hashedToken = hashToken(verificationToken);
+    await new Token({
+        userId: user._id,
+        vToken: hashedToken,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 60 * (60*1000) // 1h
+    }).save();
+
+    // Construct verification URL
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
+
+    //Send Email
+    const subject = 'Vérifier Votre Compte - EMARH:AUTH';
+    const send_to = user.email;
+    const sent_from = process.env.EMAIL_USER;
+    const reply_to = 'noreply@emarh-auth.fr';
+    const template = 'verifyEmail';
+    const name = user.name;
+    const link = verificationUrl;
+
+    try {
+        await sendEmail(subject, send_to, sent_from, reply_to, template, name, link);
+        res.status(200).json({ message: 'Email envoyé !' });
+    } catch(error) {
+        res.status(500);
+        throw new Error('L\'Email n\'a pas été envoyé, veuillez réessayer');
+    }
 });
 
 module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail };
