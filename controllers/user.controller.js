@@ -305,11 +305,41 @@ const sendVerificationEmail = asyncHandler(async(req, res) => {
 
     try {
         await sendEmail(subject, send_to, sent_from, reply_to, template, name, link);
-        res.status(200).json({ message: 'Email envoyé !' });
+        res.status(200).json({ message: 'Email de vérification envoyé !' });
     } catch(error) {
         res.status(500);
         throw new Error('L\'Email n\'a pas été envoyé, veuillez réessayer');
     }
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail };
+const verifyUser = asyncHandler(async(req, res) => {
+    const { verificationToken } = req.params;
+
+    const hashedToken = hashToken(verificationToken);
+
+    const userToken = await Token.findOne({
+        vToken: hashedToken,
+        expiresAt: {$gt: Date.now()}
+    });
+
+    if (!userToken) {
+        res.status(404);
+        throw new Error('Token Invalide ou Expiré');
+    }
+
+    // Find User
+    const user = await User.findOne({ _id: userToken.userId });
+
+    if (user.isVerified) {
+        res.status(400);
+        throw new Error('Ce Compte a déjà été vérifié.')
+    }
+
+    // Now verify user
+    user.isVerified = true;
+    await user.save();
+
+    res.status(200).json({ message: 'La Vérification de Votre Compte a été effctuée avec succès !' });
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser };
