@@ -342,4 +342,8 @@ const verifyUser = asyncHandler(async(req, res) => {
     res.status(200).json({ message: 'La Vérification de Votre Compte a été effctuée avec succès !' });
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser };
+const forgotPassword = asyncHandler(async(req, res) => {
+    res.send('Forgot Password');
+});
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser, forgotPassword };

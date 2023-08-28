@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser } = require('../controllers/user.controller');
+const { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser, forgotPassword } = require('../controllers/user.controller');
 const { protect, adminOnly, authorOnly } = require('../middlewares/auth.middleware');
 const userRouter = express.Router();
 
@@ -15,5 +15,6 @@ userRouter.get('/upgradeUser', protect, adminOnly, upgradeUser);
 userRouter.post('/sendAutomatedEmail', protect, sendAutomatedEmail);
 userRouter.post('/sendVerificationEmail', protect, sendVerificationEmail);
 userRouter.patch('/verifyUser/:verificationToken', verifyUser);
+userRouter.post('/forgotPassword', forgotPassword);
 
 module.exports = userRouter;
