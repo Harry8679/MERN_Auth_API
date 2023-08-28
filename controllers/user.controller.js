@@ -343,7 +343,55 @@ const verifyUser = asyncHandler(async(req, res) => {
 });
 
 const forgotPassword = asyncHandler(async(req, res) => {
-    res.send('Forgot Password');
+
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if(!user) {
+        res.status(404);
+        throw new Error('Cet email n\'existe pas.');
+    }
+
+    // Delete Token if it exists in DB
+    let token = await Token.findOne({ userId: user._id });
+
+    if (token) {
+        await token.deleteOne();
+    }
+
+    // Create Verification Token and Save
+    const resetToken = crypto.randomBytes(32).toString('hex') + user._id;
+    // console.log('resetToken', resetToken);
+
+    // Hash token and save
+    const hashedToken = hashToken(resetToken);
+    await new Token({
+        userId: user._id,
+        rToken: hashedToken,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 60 * (60 * 1000) // 1h
+    }).save();
+
+    // Construct Reset URL
+    const resetUrl = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
+
+    // Send Email
+    const subject = 'Réinitialiser votre mot de passe - EMARH:AUTH';
+    const send_to = user.email;
+    const sent_from = process.env.EMAIL_USER;
+    const reply_to = 'noreply@emarh-auth.fr';
+    const template = 'forgotPassword';
+    const name = user.name;
+    const link = resetUrl;
+
+    try {
+        await sendEmail(subject, send_to, sent_from, reply_to, template, name, link);
+        res.status(200).json({ message: 'Mot de passe réinitialisé et email envoyé !' });
+    } catch(error) {
+        res.status(500);
+        throw new Error('L\'Email n\'a pas été envoyé, veuillez réessayer');
+    }
 });
 
 module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser, forgotPassword };
