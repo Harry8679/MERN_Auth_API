@@ -362,7 +362,7 @@ const forgotPassword = asyncHandler(async(req, res) => {
 
     // Create Verification Token and Save
     const resetToken = crypto.randomBytes(32).toString('hex') + user._id;
-    // console.log('resetToken', resetToken);
+    console.log('resetToken', resetToken);
 
     // Hash token and save
     const hashedToken = hashToken(resetToken);
@@ -392,6 +392,35 @@ const forgotPassword = asyncHandler(async(req, res) => {
         res.status(500);
         throw new Error('L\'Email n\'a pas été envoyé, veuillez réessayer');
     }
+
 });
 
-module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, sendVerificationEmail, verifyUser, forgotPassword };
+    const resetPassword = asyncHandler(async(req, res) => {
+        // res.send('Reset Password');
+        const { resetToken } = req.params;
+        const { password } = req.body;
+
+        const hashedToken = hashToken(resetToken);
+
+        const userToken = await Token.findOne({
+            rToken: hashedToken,
+            expiresAt: { $gt: Date.now() }
+        });
+
+        if (!userToken) {
+            res.status(404);
+            throw new Error('Token Invalide ou Expiré')
+        }
+
+        // Find User
+        const user = await User.findOne({ _id: userToken.userId });
+
+        // Now Reset Password
+        user.password = password;
+        await user.save();
+
+        res.status(200).json({ message: 'La réinitialisation de votre mot de passe a été effctuée avec succès. Veuillez vous connecter.' });
+    });
+
+module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, 
+    sendVerificationEmail, verifyUser, forgotPassword, resetPassword };

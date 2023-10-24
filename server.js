@@ -8,7 +8,7 @@ const userRouter = require('./routes/user.route');
 const errorHandler = require('./middlewares/error.middleware');
 
 const app = express();
-const PORT = process.env.PORT || 5010;
+const PORT = process.env.PORT || 5020;
 
 
 // Middlewares
