@@ -422,5 +422,36 @@ const forgotPassword = asyncHandler(async(req, res) => {
         res.status(200).json({ message: 'La réinitialisation de votre mot de passe a été effctuée avec succès. Veuillez vous connecter.' });
     });
 
+    const changePassword = asyncHandler(async(req, res) => {
+        const { oldPassword, password } = req.body;
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            res.status(404);
+            throw new Error('Utilisateur non existant');
+        }
+
+        if (!oldPassword || !password) {
+            res.status(400);
+            throw new Error('Veuillez renseigner votre ancien et nouveau mot de passe.')
+        }
+
+        // Check if old password is correct
+        const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
+
+        // Save new Password
+        if (user && passwordIsCorrect) {
+            user.password = password;
+            await user.save();
+
+            res.status(200).json({
+                message: 'La modification de votre mot de passe a bien été prise en compte !'
+            });
+        } else {
+            res.status(400);
+            throw new Error('Votre ancien mot de passe est incorrect');
+        }
+    });
+
 module.exports = { registerUser, loginUser, logoutUser, getUser, updateUser, deleteUser, getUsers, loginStatus, upgradeUser, sendAutomatedEmail, 
-    sendVerificationEmail, verifyUser, forgotPassword, resetPassword };
+    sendVerificationEmail, verifyUser, forgotPassword, resetPassword, changePassword };
