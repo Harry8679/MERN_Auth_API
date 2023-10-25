@@ -7,6 +7,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail.util');
 const crypto = require('crypto');
+const Cryptr = require('cryptr');
+const cryptr = new Cryptr(process.env.CRYPTR_KEY);
 
 // Register : Create a account
 const registerUser = asyncHandler(async (req, res) => {
@@ -84,6 +86,39 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!passwordIsCorrect) {
         res.status(400);
         throw new Error('Email ou mot de passe est incorrect !');
+    }
+
+    // Trigger 2FA for unknow UserAgent
+    const ua = parser(req.headers['user-agent']);
+    const thisUserAgent = ua.ua;
+    console.log(thisUserAgent);
+    const allowedAgent = user.userAgent.includes(thisUserAgent);
+
+    if(!allowedAgent) {
+        // Generate 6 digit code
+        const loginCode = Math.floor(100000 + Math.random() * 900000);
+        console.log(loginCode);
+
+        // Encrypt login code before saving to DB
+        const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
+
+        // Delete Token if it exists in DB
+        let userToken = await Token.findOne({ userId: user._id });
+
+        if (userToken) {
+            await userToken.deleteOne();
+        }
+
+        // Save Token to DB
+        await new Token({
+            userId: user._id,
+            lToken: encryptedLoginCode,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + 60 * (60 * 1000) // 1h
+        }).save();
+
+        res.status(400);
+        throw new Error('Vérifiez votre email pour le code de connexion');
     }
 
     // Generate Token
